@@ -17,8 +17,9 @@ App: `http://localhost:8083` | Swagger UI: `http://localhost:8083/api/docs/swagg
 
 **Build and verify:**
 ```bash
-mvn clean package        # full build + tests
-mvn test                 # tests only (requires Docker for Testcontainers)
+mvn clean package            # full build + tests (recommended for CI / first run)
+mvn compile && mvn test      # compile then test — use this when target/ is absent or stale
+mvn test                     # tests only — safe only when compiled classes already exist in target/
 ```
 
 **Format code before committing:**
@@ -116,6 +117,8 @@ The dev profile (`SPRING_PROFILES_ACTIVE=dev`) drops and recreates the schema on
 - Tests use the `test` Spring profile.
 - Test resources (JSON schemas, fixtures) mirror the feature layout under `src/test/resources/<feature>/`.
 - Architecture rules are enforced by `ArchitectureRulesTest` and `ModularityTests` — they run as part of `mvn test`.
+- **Always run tests after code changes.** Before considering any change done, run `mvn compile && mvn test`. Do not skip this step.
+- **`mvn test` requires compiled sources.** On a clean workspace or after `mvn clean`, the Surefire forked process crashes at test *discovery* with `ClassNotFoundException` on OpenAPI-generated types (e.g. `com.zufar.icedlatte.openapi.dto.OrderStatus`). Root cause: `openapi-generator-maven-plugin` writes sources to `target/generated-sources/openapi/` and they must be compiled before the test JVM starts. Always run `mvn compile` (or `mvn clean package`) before `mvn test` when `target/` is missing.
 
 ## Key Infrastructure
 
