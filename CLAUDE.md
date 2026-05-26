@@ -17,14 +17,14 @@ App: `http://localhost:8083` | Swagger UI: `http://localhost:8083/api/docs/swagg
 
 **Build and verify:**
 ```bash
-mvn clean package            # full build + tests (recommended for CI / first run)
-mvn compile && mvn test      # compile then test — use this when target/ is absent or stale
-mvn test                     # tests only — safe only when compiled classes already exist in target/
+mvn clean compile   # compile — use this when target/ is absent or stale
+mvn test            # tests only — safe only when compiled classes already exist in target/
+mvn clean package   # full build + tests (recommended for CI / first run)
 ```
 
 **Format code before committing:**
 ```bash
-mvn spotless:apply       # apply Palantir Java Format to touched files
+mvn spotless:apply  # apply Palantir Java Format to touched files
 ```
 
 **Run a single test class:**
@@ -112,13 +112,13 @@ The dev profile (`SPRING_PROFILES_ACTIVE=dev`) drops and recreates the schema on
 
 ## Testing
 
+- **Always run tests after code changes.** Before considering any change done, run `mvn compile && mvn test`. Do not skip this step.
+- **`mvn test` requires compiled sources.** Always run `mvn clean compile` before `mvn test` when `target/` is missing.
 - Integration tests extend `IntegrationTestBase` (`src/test/java/com/zufar/icedlatte/test/config/`), which starts PostgreSQL and Redis via **Testcontainers**. Docker must be running.
 - `JavaMailSender` and `ObjectStorage` are mocked in `IntegrationTestBase` — no real email or S3 access in tests.
 - Tests use the `test` Spring profile.
 - Test resources (JSON schemas, fixtures) mirror the feature layout under `src/test/resources/<feature>/`.
 - Architecture rules are enforced by `ArchitectureRulesTest` and `ModularityTests` — they run as part of `mvn test`.
-- **Always run tests after code changes.** Before considering any change done, run `mvn compile && mvn test`. Do not skip this step.
-- **`mvn test` requires compiled sources.** On a clean workspace or after `mvn clean`, the Surefire forked process crashes at test *discovery* with `ClassNotFoundException` on OpenAPI-generated types (e.g. `com.zufar.icedlatte.openapi.dto.OrderStatus`). Root cause: `openapi-generator-maven-plugin` writes sources to `target/generated-sources/openapi/` and they must be compiled before the test JVM starts. Always run `mvn compile` (or `mvn clean package`) before `mvn test` when `target/` is missing.
 
 ## Key Infrastructure
 
